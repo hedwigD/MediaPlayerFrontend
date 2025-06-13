@@ -2,9 +2,11 @@ import TabLayout, {Tab} from '@enact/sandstone/TabLayout';
 import {Header, Panel} from '@enact/sandstone/Panels';
 import $L from '@enact/i18n/$L';
 import Home from './Home';
+// eslint-disable-next-line no-unused-vars
 import Video from './Video';
 import Account from './Account';
 import HLSVideo from './HLSVideo';
+import Profile from './Profile';
 import Icon from '@enact/sandstone/Icon';
 const Main = (props) => {
 	return (
@@ -19,6 +21,9 @@ const Main = (props) => {
 				</Tab>
 				<Tab title={$L('Account')}>
 					<Account />
+				</Tab>
+				<Tab title={$L('My Page')}>
+					<Profile />
 				</Tab>
 			</TabLayout>
 		</Panel>
