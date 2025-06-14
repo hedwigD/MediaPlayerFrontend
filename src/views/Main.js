@@ -5,10 +5,8 @@ import $L from '@enact/i18n/$L';
 import Home from './Home';
 import Account from './Account';
 import Profile from './Profile';
-import HLSVideo from './HLSVideo';
-import Icon from '@enact/sandstone/Icon';
-// eslint-disable-next-line no-unused-vars
 import Video from './Video';
+import Icon from '@enact/sandstone/Icon';
 
 const Main = (props) => {
 	// ✅ 상태 관리: 선택된 영상과 탭 index
@@ -24,6 +22,7 @@ const Main = (props) => {
 	return (
 		<Panel {...props}>
 			<Header
+				style={{ height: '6rem'}}
 				title={
 					<Icon
 						style={{
@@ -42,8 +41,8 @@ const Main = (props) => {
 				<Tab title={$L('Home')}>
 					<Home onVideoSelect={handleVideoSelect} />
 				</Tab>
-				<Tab title={$L('HLS Video Player')}>
-					<HLSVideo src={videoSrc || "https://cdn-vos-ppp-01.vos360.video/Content/HLS_HLSCLEAR/Live/channel(PPP-LL-2HLS)/index.m3u8"} />
+				<Tab title={$L('Video Player')}>
+					<Video src={"/sample.mp4"} />
 				</Tab>
 				<Tab title={$L('Account')}>
 					<Account />

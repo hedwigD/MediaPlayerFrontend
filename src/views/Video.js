@@ -6,16 +6,15 @@ const Video = (prop) => {
 	return (
 		<div
 			style={{
-				height: '70vh',
+				height: '80vh',
 				transform: 'scale(1)',
 				transformOrigin: 'top',
-				width: '70vw',
+				width: '90vw',
 				display: 'flex',
 				justifyContent: 'center',
 				margin: '0 auto'
 			}}
 		>
-			<div>Sample code</div>
 			<VideoPlayer
 				autoCloseTimeout={7000} // 재생 바(마우스 올리면 나오는거) 떴다가 사라지는 시간
 				backButtonAriaLabel="go to previous"
