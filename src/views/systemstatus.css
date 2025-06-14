@@ -1,0 +1,60 @@
+/* 전체 배경 및 기본 글씨 색상 */
+.system-status-page {
+  background-color: #000000;  /* 검정 배경 */
+  color: #FFFFFF;             /* 흰색 텍스트 */
+  padding: 2rem;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* Sandstone Header 내부 텍스트 강조 */
+.system-header {
+  color: #A50034; /* LG Red */
+}
+
+/* 차트와 텍스트 구역 정렬 */
+.system-dashboard-container {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+/* 차트 각각의 크기 */
+.cpu-chart,
+.memory-chart {
+  height: 300px;
+  background-color: #111111;
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+/* CPU 차트 영역은 조금 넓게 */
+.cpu-chart {
+  flex: 3;
+}
+
+/* 메모리 차트 영역 */
+.memory-chart {
+  flex: 2;
+}
+
+/* 설명 텍스트 스타일 */
+.system-text {
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+/* Sandstone Heading 스타일 조정 */
+.system-heading {
+  color: #FFFFFF;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+/* 강조 텍스트 */
+.accent {
+  color: #A50034;
+  font-weight: bold;
+}

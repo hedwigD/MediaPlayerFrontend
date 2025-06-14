@@ -5,7 +5,9 @@
 	"type": "web",
 	"main": "index.html",
 	"title": "Enact Template",
-	"accessibility": {"supportsAudioGuidance": true},
+	"accessibility": {
+		"supportsAudioGuidance": true
+	},
 	"allowAudioCapture": false,
 	"allowVideoCapture": false,
 	"disableBackHistoryAPI": true,
@@ -23,5 +25,8 @@
 	"useCamera": false,
 	"useGraphicCamera": false,
 	"useNativeScroll": true,
-	"visible": true
+	"visible": true,
+	"requiredPermissions": [
+	"com.webos.service.tv.systemmonitor"
+	]
 }

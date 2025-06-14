@@ -6,8 +6,9 @@ import Home from './Home';
 import Account from './Account';
 import Profile from './Profile';
 import Video from './Video';
+import SystemStatus from './SystemStatus';
+import HLSVideo from './HLSVideo';
 import Icon from '@enact/sandstone/Icon';
-
 const Main = (props) => {
 	// ✅ 상태 관리: 선택된 영상과 탭 index
 	const [videoSrc, setVideoSrc] = useState(null);
@@ -49,6 +50,9 @@ const Main = (props) => {
 				</Tab>
 				<Tab title={$L('My Page')}>
 					<Profile />
+				</Tab>
+				<Tab title={$L('Status')}>
+					<SystemStatus />
 				</Tab>
 			</TabLayout>
 		</Panel>

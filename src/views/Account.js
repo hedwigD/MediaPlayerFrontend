@@ -1,89 +1,86 @@
 /* eslint-disable */
+import React, { useState } from 'react';
 import Button from '@enact/sandstone/Button';
-import {InputField} from '@enact/sandstone/Input';
-import axios from 'axios';
-import {useEffect, useState} from 'react';
+import { InputField } from '@enact/sandstone/Input';
+import BodyText from '@enact/sandstone/BodyText';
 import $L from '@enact/i18n/$L';
+import axios from 'axios';
+import './account.css';
 
 const Account = () => {
-	const [state, setState] = useState({
-		users: [],
-		name: '',
-		email: ''
-	});
+  const [mode, setMode] = useState('login'); // 'login' or 'register'
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [message, setMessage] = useState('');
 
-	const fetchUser = async () => {
-		try {
-			const response = await axios.get('/api/users');
-			setState({users: response.data});
-			console.log('>>>>>> RESPONSE: ', response.data);
-		} catch (error) {
-			console.log(error);
-		}
-	};
-	const handleSubmit = () => {
-		axios
-			.post('/api/users', {name: state.name, email: state.email})
-			.then(response => {
-				setState(prevState => ({
-					users: [...prevState.users, response.data],
-					name: '',
-					email: ''
-				}));
-			})
-			.catch(error => console.error(error));
-	};
+  const handleInputChange = (key, value) => {
+    setForm(prev => ({ ...prev, [key]: value }));
+  };
 
-	const handleDelete = async id => {
-		try {
-			await axios.delete(`/api/users/${id}`);
-			setState(prevState => ({
-				users: prevState.users.filter(user => user._id !== id)
-			}));
-		} catch (error) {
-			console.error(error);
-		}
-	};
+  const handleSubmit = async () => {
+    const endpoint = mode === 'login' ? '/api/login' : '/api/register';
+    const payload = mode === 'login'
+      ? { email: form.email, password: form.password }
+      : form;
 
-	useEffect(() => {
-		fetchUser();
-	}, []);
+    try {
+      const response = await axios.post(endpoint, payload);
+      setMessage(`${mode === 'login' ? '로그인' : '회원가입'} 성공: ${response.data.name}`);
+      setForm({ name: '', email: '', password: '' });
+    } catch (err) {
+      setMessage('에러: ' + err.response?.data?.message || err.message);
+    }
+  };
+
+  const toggleMode = () => {
+    setMode(prev => (prev === 'login' ? 'register' : 'login'));
+    setMessage('');
+    setForm({ name: '', email: '', password: '' });
+  };
 
 	return (
-		<>
-			<h2>User List</h2>
-			{Array.isArray(state.users) ? (
-				<ul>
-					{state.users.map(user => (
-						<li key={user._id}>
-							{user.name} ({user.email})
-							<Button onClick={() => handleDelete(user._id)}>
-								{$L('Delete')}
-							</Button>
-						</li>
-					))}
-				</ul>
-			) : (
-				<p>{$L('Cannot retreive data!')}</p>
-			)}
-			<h2>Add User</h2>
+	<div className="account-container">
+		<h2 className="account-heading">
+		{mode === 'login' ? $L('로그인') : $L('회원가입')}
+		</h2>
+
+		<div className="account-form">
+		{mode === 'register' && (
 			<InputField
-				type="text"
-				value={state.name}
-				onChange={e => setState(prev => ({...prev, name: e.value}))}
-				placeholder="Name"
+			placeholder="이름"
+			value={form.name}
+			onChange={e => handleInputChange('name', e.value)}
 			/>
-			<InputField
-				type="email"
-				value={state.email}
-				onChange={e => setState(prev => ({...prev, email: e.value}))}
-				placeholder="Email"
-			/>
-			<Button onClick={handleSubmit} type="submit">
-				{$L('Add User')}
-			</Button>
-		</>
+		)}
+
+		<InputField
+			placeholder="이메일"
+			value={form.email}
+			type="email"
+			onChange={e => handleInputChange('email', e.value)}
+		/>
+
+		<InputField
+			placeholder="비밀번호"
+			value={form.password}
+			type="password"
+			onChange={e => handleInputChange('password', e.value)}
+		/>
+
+		<Button onClick={handleSubmit} type="submit">
+			{mode === 'login' ? $L('로그인') : $L('회원가입')}
+		</Button>
+		</div>
+
+		<BodyText className="account-msg">{message}</BodyText>
+
+		<Button onClick={toggleMode} size="small">
+		{mode === 'login'
+			? $L('계정이 없으신가요? 회원가입')
+			: $L('계정이 있으신가요? 로그인')}
+		</Button>
+	</div>
 	);
+
 };
 
 export default Account;

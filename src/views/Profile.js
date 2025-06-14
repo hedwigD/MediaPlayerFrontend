@@ -115,6 +115,7 @@ class Profile extends Component {
                     className="profile-avatar-button"
                     key={i}
                     size="small"
+                    // eslint-disable-next-line
                     onClick={this.handleAvatarClick.bind(this, i)}
                     aria-label={`아바타 ${i+1}`}
                   >
@@ -168,6 +169,7 @@ class Profile extends Component {
               {showAlert && (
                 <Alert
                   type="fullscreen"
+                  // eslint-disable-next-line
                   open={true}
                   onClose={this.handleCloseAlert}
                   title="알림"
