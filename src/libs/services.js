@@ -6,3 +6,11 @@ export const getSystemInfo = params =>
 
 const sam = request('luna://com.webos.applicationManager');
 export const launch = parameters => sam({method: 'launch', parameters});
+
+const mem = request('luna://com.webos.memorymanager')
+export const getProcStat = params => {
+	mem({ method: 'getProcStat', ...params });
+};
+
+export const getUnitList = params =>
+	mem({ method: 'getUnitList', ...params });

@@ -20,7 +20,7 @@ const send = (Req, service, params) => {
 const request = service => params => {
 	/* istanbul ignore if */
 	if (isDevServe()) {
-		// eslint-disable-next-line
+		 
 		const req = require('../../__mocks__/@enact/webos/LS2Request');
 		return send(req.default, service, params);
 	}

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import {useState} from 'react';
 import TabLayout, {Tab} from '@enact/sandstone/TabLayout';
 import {Header, Panel} from '@enact/sandstone/Panels';
 import $L from '@enact/i18n/$L';
@@ -50,9 +50,11 @@ const Main = (props) => {
 			/>
 			<TabLayout
 				index={tabIndex}
+				// eslint-disable-next-line
 				onSelect={({index}) => setTabIndex(forceToLoginTab(index))}
 			>
 				<Tab title={$L('Home')}>
+					{/* eslint-disable-next-line */}
 					{isLoggedIn ? <Home onVideoSelect={handleVideoSelect} /> : null}
 				</Tab>
 				<Tab title={$L('HLS Video Player')}>
@@ -66,6 +68,7 @@ const Main = (props) => {
 					) : null}
 				</Tab>
 				<Tab title={$L('Account')}>
+					{/* eslint-disable-next-line */}
 					<Account onLoginSuccess={handleLoginSuccess} />
 				</Tab>
 				<Tab title={$L('My Page')}>

@@ -26,7 +26,7 @@ describe('The app handles document events.', () => {
 			replace: jest.fn()
 		};
 		await launch();
-		/* eslint-disable-next-line no-undef */
+		 
 		const event = new CustomEvent('webOSLocaleChange');
 		await act(async () => {
 			await document.dispatchEvent(event);

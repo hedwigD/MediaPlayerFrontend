@@ -1,126 +1,143 @@
-// src/pages/SystemStatusPage.js
-import { useEffect, useRef, useState } from 'react';
-import * as echarts from 'echarts';
-import { Panel, Header } from '@enact/sandstone/Panels';
-import Heading from '@enact/sandstone/Heading';
-import './systemstatus.css';
+import { useState, useEffect, useRef } from 'react';
+import { getProcStat, getUnitList } from '../libs/services';
+import debugLog from '../libs/log';
+import ReactECharts from 'echarts-for-react';
 
-function SystemStatus(props) {
-  const cpuChartRef = useRef(null);
-  const memChartRef = useRef(null);
-  const [cpuData, setCpuData] = useState([]);
-  const [memoryInfo, setMemoryInfo] = useState({ total: 0, used: 0 });
+const SystemStatus = () => {
+	const cpuRef = useRef(null);
+	const memRef = useRef(null);
+	const [cpuUsage, setCpuUsage] = useState([]);
+	const [memoryUsage, setMemoryUsage] = useState([]);
 
-  const fetchCpuLoad = () => {
-    window.webOS?.service?.request('luna://com.webos.service.tv.systemmonitor', {
-      method: 'getCpuLoad',
-      parameters: {},
-      onSuccess: (res) => {
-        const time = new Date().toLocaleTimeString();
-        const usage = parseFloat((res.load * 100).toFixed(2));
-        setCpuData(prev => {
-          const updated = [...prev, { time, usage }];
-          return updated.length > 20 ? updated.slice(-20) : updated;
-        });
-      },
-      onFailure: (err) => console.error("CPU Error:", err)
-    });
-  };
+	useEffect(() => {
+		if (!cpuRef.current) {
+			cpuRef.current = getProcStat({
+				parameters: { subscribe: true },
+				onSuccess: res => {
+					debugLog('CPU_STATS[S]', res);
+					const cpuStats = res.stat.slice(0, 5).map(line => {
+						const parts = line.split(/\s+/);
+						return {
+							name: parts[0], // e.g., cpu0
+							data: [
+								{ name: 'User', value: parseInt(parts[1]) },
+								{ name: 'Nice', value: parseInt(parts[2]) },
+								{ name: 'System', value: parseInt(parts[3]) },
+								{ name: 'Idle', value: parseInt(parts[4]) }
+							]
+						};
+					});
+					setCpuUsage(cpuStats);
+				},
+				onFailure: err => debugLog('CPU_STATS[F]', err)
+			});
+		}
 
-  const fetchMemoryStatus = () => {
-    window.webOS?.service?.request('luna://com.webos.service.tv.systemmonitor', {
-      method: 'getMemoryStatus',
-      parameters: {},
-      onSuccess: (res) => {
-        setMemoryInfo({ total: res.total, used: res.used });
-      },
-      onFailure: (err) => console.error("Memory Error:", err)
-    });
-  };
+		if (!memRef.current) {
+			memRef.current = getUnitList({
+				parameters: { subscribe: true },
+				onSuccess: res => {
+					debugLog('MEMORY_STATS[S]', res);
+					setMemoryUsage([
+						{ name: 'Usable Memory', value: res.usable_memory },
+						{ name: 'Swap Used', value: res.swapUsed }
+					]);
+				},
+				onFailure: err => debugLog('MEMORY_STATS[F]', err)
+			});
+		}
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchCpuLoad();
-      fetchMemoryStatus();
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
+		return () => {
+			if (cpuRef.current) {
+				cpuRef.current.cancel();
+				cpuRef.current = null;
+			}
+			if (memRef.current) {
+				memRef.current.cancel();
+				memRef.current = null;
+			}
+		};
+	}, []);
 
-  useEffect(() => {
-    const cpuChart = echarts.init(cpuChartRef.current);
-    const cpuOption = {
-      title: { text: 'CPU 사용량 (%)' },
-      xAxis: { type: 'category', data: cpuData.map(d => d.time), boundaryGap: false },
-      yAxis: { type: 'value', max: 100, min: 0 },
-      tooltip: { trigger: 'axis' },
-      series: [{
-        name: 'CPU',
-        type: 'line',
-        smooth: true,
-        data: cpuData.map(d => d.usage),
-        areaStyle: {},
-        showSymbol: false,
-        lineStyle: { width: 2 }
-      }]
-    };
-    cpuChart.setOption(cpuOption);
-    return () => cpuChart.dispose();
-  }, [cpuData]);
+	const renderCPUPies = () =>
+		cpuUsage.map((core, idx) => (
+			<div key={idx} style={{ width: '45%', margin: '10px' }}>
+				<h4 style={{ color: '#ccc' }}>{core.name}</h4>
+				<ReactECharts
+					option={{
+						backgroundColor: 'transparent',
+						tooltip: { trigger: 'item' },
+						series: [
+							{
+								type: 'pie',
+								radius: ['30%', '70%'],
+								avoidLabelOverlap: false,
+								itemStyle: { borderRadius: 5, borderColor: '#000', borderWidth: 1 },
+								label: { show: false },
+								emphasis: {
+									label: { show: true, fontSize: 14, fontWeight: 'bold' }
+								},
+								labelLine: { show: false },
+								data: core.data
+							}
+						]
+					}}
+					style={{ height: 200 }}
+				/>
+			</div>
+		));
 
-  useEffect(() => {
-    const memChart = echarts.init(memChartRef.current);
-    const percent = ((memoryInfo.used / memoryInfo.total) * 100).toFixed(1);
+	const renderMemoryBar = () => (
+		<ReactECharts
+			option={{
+				backgroundColor: 'transparent',
+				xAxis: {
+					type: 'category',
+					data: memoryUsage.map(d => d.name),
+					axisLabel: { color: '#ccc' }
+				},
+				yAxis: {
+					type: 'value',
+					axisLabel: { color: '#ccc' }
+				},
+				tooltip: { trigger: 'axis' },
+				series: [
+					{
+						data: memoryUsage.map(d => d.value),
+						type: 'bar',
+						itemStyle: { color: '#47b39c' },
+						barWidth: '40%'
+					}
+				]
+			}}
+			style={{ height: 300 }}
+		/>
+	);
 
-    const memOption = {
-      title: {
-        text: '메모리 사용률',
-        left: 'center'
-      },
-      tooltip: {
-        formatter: `{b}: {c}%`
-      },
-      series: [
-        {
-          name: 'Memory',
-          type: 'pie',
-          radius: ['60%', '80%'],
-          avoidLabelOverlap: false,
-          label: {
-            show: true,
-            position: 'center',
-            formatter: `${percent}%`,
-            fontSize: 24
-          },
-          data: [
-            { value: memoryInfo.used, name: 'Used' },
-            { value: memoryInfo.total - memoryInfo.used, name: 'Free' }
-          ]
-        }
-      ]
-    };
-    memChart.setOption(memOption);
-    return () => memChart.dispose();
-  }, [memoryInfo]);
+	return (
+		<div
+			style={{
+				display: 'flex',
+				flexDirection: 'column',
+				gap: '20px',
+				overflowY: 'auto',
+				maxHeight: '80vh',
+				padding: '10px',
+				backgroundColor: '#000',
+				color: '#fff'
+			}}
+		>
+			<div>
+				<h3 style={{ color: '#E50914' }}>CPU Status</h3>
+				<div style={{ display: 'flex', flexWrap: 'wrap' }}>{renderCPUPies()}</div>
+			</div>
 
-  return (
-  <Panel {...props} className="system-status-page">
-    <Header title={<span className="system-header">시스템 리소스 대시보드</span>} />
-    <div className="system-dashboard-container">
-      <div className="cpu-chart">
-        <Heading className="system-heading" showLine>CPU 실시간 사용량</Heading>
-        <div ref={cpuChartRef} style={{ width: '100%', height: '100%' }} />
-      </div>
-      <div className="memory-chart">
-        <Heading className="system-heading" showLine>메모리 사용률</Heading>
-        <div ref={memChartRef} style={{ width: '100%', height: '200px' }} />
-        <div className="system-text">
-          전체: <span className="accent">{(memoryInfo.total / 1024).toFixed(1)} MB</span><br />
-          사용 중: <span className="accent">{(memoryInfo.used / 1024).toFixed(1)} MB</span>
-        </div>
-      </div>
-    </div>
-  </Panel>
-  );
-}
+			<div>
+				<h3 style={{ color: '#E50914' }}>Memory Status</h3>
+				{renderMemoryBar()}
+			</div>
+		</div>
+	);
+};
 
 export default SystemStatus;

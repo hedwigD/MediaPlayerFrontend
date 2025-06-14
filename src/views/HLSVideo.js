@@ -17,7 +17,7 @@ const HLSVideo = (props) => {
 				console.log('manifest loaded:', data.levels.length + ' levels');
 				video.play();
 			});
-
+			// eslint-disable-next-line
 			hls.on(Hls.Events.FRAG_LOADED, function (event, data) {
 				const index = hls.currentLevel;
 				const level = hls.levels[index];

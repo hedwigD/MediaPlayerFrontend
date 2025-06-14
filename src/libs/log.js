@@ -12,7 +12,7 @@ const debugLog = (msgId, values) => {
 	}
 
 	if (['development', 'test'].includes(process.env.NODE_ENV)) {
-		// eslint-disable-next-line no-console
+		 
 		console.log(id, values);
 	}
 };

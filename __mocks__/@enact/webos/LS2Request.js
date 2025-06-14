@@ -66,7 +66,7 @@ class LS2Request {
 
 			onComplete(res);
 		} catch (err) {
-			// eslint-disable-next-line no-console
+			 
 			console.log({service, method, parameters});
 			onFailure(err);
 			onComplete(err);
