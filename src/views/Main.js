@@ -5,25 +5,35 @@ import $L from '@enact/i18n/$L';
 import Home from './Home';
 import Account from './Account';
 import Profile from './Profile';
-import Video from './Video';
 import SystemStatus from './SystemStatus';
 import HLSVideo from './HLSVideo';
 import Icon from '@enact/sandstone/Icon';
-const Main = (props) => {
-	// ✅ 상태 관리: 선택된 영상과 탭 index
-	const [videoSrc, setVideoSrc] = useState(null);
-	const [tabIndex, setTabIndex] = useState(0);
 
-	// ✅ Home에서 영상 클릭 시 호출되는 콜백
+const Main = (props) => {
+	const [videoSrc, setVideoSrc] = useState(null);
+	const [tabIndex, setTabIndex] = useState(2); // 기본 Account 탭
+	const [isLoggedIn, setIsLoggedIn] = useState(false);
+
 	const handleVideoSelect = (src) => {
 		setVideoSrc(src);
-		setTabIndex(1); // HLS Video Player 탭으로 전환
+		setTabIndex(1);
+	};
+
+	const handleLoginSuccess = () => {
+		setIsLoggedIn(true);
+		setTabIndex(0); // 로그인 후 Home으로 이동
+	};
+
+	const forceToLoginTab = (index) => {
+		if (!isLoggedIn && index !== 2) {
+			return 2;
+		}
+		return index;
 	};
 
 	return (
 		<Panel {...props}>
 			<Header
-				style={{ height: '6rem'}}
 				title={
 					<Icon
 						style={{
@@ -38,21 +48,31 @@ const Main = (props) => {
 					</Icon>
 				}
 			/>
-			<TabLayout index={tabIndex} onSelect={({index}) => setTabIndex(index)}>
+			<TabLayout
+				index={tabIndex}
+				onSelect={({index}) => setTabIndex(forceToLoginTab(index))}
+			>
 				<Tab title={$L('Home')}>
-					<Home onVideoSelect={handleVideoSelect} />
+					{isLoggedIn ? <Home onVideoSelect={handleVideoSelect} /> : null}
 				</Tab>
-				<Tab title={$L('Video Player')}>
-					<Video src={"/sample.mp4"} />
+				<Tab title={$L('HLS Video Player')}>
+					{isLoggedIn ? (
+						<HLSVideo
+							src={
+								videoSrc ||
+								"https://cdn-vos-ppp-01.vos360.video/Content/HLS_HLSCLEAR/Live/channel(PPP-LL-2HLS)/index.m3u8"
+							}
+						/>
+					) : null}
 				</Tab>
 				<Tab title={$L('Account')}>
-					<Account />
+					<Account onLoginSuccess={handleLoginSuccess} />
 				</Tab>
 				<Tab title={$L('My Page')}>
-					<Profile />
+					{isLoggedIn ? <Profile /> : null}
 				</Tab>
 				<Tab title={$L('Status')}>
-					<SystemStatus />
+					{isLoggedIn ? <SystemStatus /> : null}
 				</Tab>
 			</TabLayout>
 		</Panel>
