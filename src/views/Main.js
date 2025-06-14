@@ -8,6 +8,7 @@ import Account from './Account';
 import HLSVideo from './HLSVideo';
 import Profile from './Profile';
 import Icon from '@enact/sandstone/Icon';
+import SystemStatus from './SystemStatus';
 const Main = (props) => {
 	return (
 		<Panel {...props}>
@@ -24,6 +25,9 @@ const Main = (props) => {
 				</Tab>
 				<Tab title={$L('My Page')}>
 					<Profile />
+				</Tab>
+				<Tab title={$L('Status')}>
+					<SystemStatus />
 				</Tab>
 			</TabLayout>
 		</Panel>

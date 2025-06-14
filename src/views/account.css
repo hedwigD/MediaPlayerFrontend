@@ -1,0 +1,30 @@
+.account-container {
+  background-color: #000000;
+  color: #ffffff;
+  padding: 2rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.account-heading {
+  color: #A50034;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+}
+
+.account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; /* 입력창 간격 */
+  width: 100%;
+  max-width: 1000px;
+}
+
+.account-msg {
+  margin-top: 1rem;
+  color: #A50034;
+  font-weight: bold;
+  text-align: center;
+}
