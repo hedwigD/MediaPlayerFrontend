@@ -16,6 +16,7 @@ const Main = (props) => {
 	const [tabIndex, setTabIndex] = useState(3); // 기본 Account 탭
 	const [token, setToken] = useState(null); 
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
+	const [viewIndex, setViewIndex] = useState(0);
 	const [videoInfo, setVideoInfo] = useState({
 		src: '',
 		timestamp: 0
@@ -31,20 +32,31 @@ const Main = (props) => {
 	}, [token]);
 
 	const handleVideoSelect = async (videoId) => {
-		setCurrentVideoId(videoId);
-		setTabIndex(1);
-		try {
-			const res = await axios.get(`http://your.api/videos/${videoId}`);
-			if (res.data.isSuccess) {
-				const {sourceUrl, timestamp} = res.data.result;
-				const timeInSec =
-					timestamp.hour * 3600 + timestamp.minute * 60 + timestamp.second;
+	setCurrentVideoId(videoId);
+	setTabIndex(1);
 
-				setVideoInfo({src: sourceUrl, timestamp: timeInSec});
-			}
-		} catch (e) {
-			console.error('영상 불러오기 실패', e);
+	try {
+		const res = await axios.get(`http://15.165.123.189:8080/videos/${videoId}`, {
+		headers: {
+			Authorization: `Bearer ${token}`
 		}
+		});
+
+		if (res.data.isSuccess) {
+		const {sourceUrl, timestamp} = res.data.result;
+		const timeInSec = (() => {
+		if (typeof timestamp === 'string') {
+			const [h, m, s] = timestamp.split(':').map(Number);
+			return h * 3600 + m * 60 + s;
+		}
+		return 0;
+		})();
+
+		setVideoInfo({src: sourceUrl, timestamp: timeInSec});
+		}
+	} catch (e) {
+		console.error('영상 불러오기 실패', e);
+	}
 	};
 
 	const handleLoginSuccess = (newToken) => {
@@ -101,6 +113,7 @@ const Main = (props) => {
 								setCurrentVideoId(id);
 								setTabIndex(5);
 							}}
+							onBackToHome={() => setTabIndex(0)}
 							token={token}
 						/>
 					) : null}
