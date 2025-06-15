@@ -61,48 +61,51 @@ const SystemStatus = () => {
 		};
 	}, []);
 
-	const renderCPUPies = () =>
-		cpuUsage.map((core, idx) => (
-			<div key={idx} style={{ width: '45%', margin: '10px' }}>
-				<h4 style={{ color: '#ccc' }}>{core.name}</h4>
-				<ReactECharts
-					option={{
-						backgroundColor: 'transparent',
-						tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
-						series: [
-							{
-								type: 'pie',
-								radius: ['30%', '70%'],
-								avoidLabelOverlap: false,
-								itemStyle: {
-									borderRadius: 5,
-									borderColor: '#000',
-									borderWidth: 1
-								},
+	const renderCPUPies = () => {
+	if (!cpuUsage.data) return null;
+
+	return (
+		<div style={{ width: '100%', margin: '10px' }}>
+			<h4 style={{ color: '#ccc' }}>
+				{cpuUsage.name.toUpperCase()} (총 {cpuUsage.coreCount}코어)
+			</h4>
+			<ReactECharts
+				option={{
+					backgroundColor: 'transparent',
+					tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
+					series: [
+						{
+							type: 'pie',
+							radius: ['30%', '70%'],
+							avoidLabelOverlap: false,
+							itemStyle: {
+								borderRadius: 5,
+								borderColor: '#000',
+								borderWidth: 1
+							},
+							label: {
+								show: true,
+								formatter: '{b}: {d}%',
+								color: '#fff',
+								fontSize: 12
+							},
+							emphasis: {
 								label: {
 									show: true,
-									formatter: '{b}: {d}%',
-									color: '#fff',
-									fontSize: 12
-								},
-								emphasis: {
-									label: {
-										show: true,
-										fontSize: 14,
-										fontWeight: 'bold'
-									}
-								},
-								labelLine: {
-									show: true
-								},
-								data: core.data
-							}
-						]
-					}}
-					style={{ height: 200 }}
-				/>
-			</div>
-		));
+									fontSize: 14,
+									fontWeight: 'bold'
+								}
+							},
+							labelLine: { show: true },
+							data: cpuUsage.data
+						}
+					]
+				}}
+				style={{ height: 250 }}
+			/>
+		</div>
+	);
+};
 
 	const renderMemoryBar = () => (
 		<ReactECharts
