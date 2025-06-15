@@ -6,18 +6,35 @@ import Home from './Home';
 import Account from './Account';
 import Profile from './Profile';
 import SystemStatus from './SystemStatus';
-import HLSVideo from './HLSVideo';
+import axios from 'axios';
+import Video from './Video';
 import Icon from '@enact/sandstone/Icon';
 
 const Main = (props) => {
 	const [videoSrc, setVideoSrc] = useState(null);
 	const [tabIndex, setTabIndex] = useState(2); // 기본 Account 탭
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
+	const [videoInfo, setVideoInfo] = useState({
+		src: '',
+		timestamp: 0
+	});
 
-	const handleVideoSelect = (src) => {
-		setVideoSrc(src);
-		setTabIndex(1);
-	};
+
+	const handleVideoSelect = async (videoId) => {
+	try {
+		const res = await axios.get(`http://your.api/videos/${videoId}`);
+		if (res.data.isSuccess) {
+			const {sourceUrl, timestamp} = res.data.result;
+			const timeInSec =
+				timestamp.hour * 3600 + timestamp.minute * 60 + timestamp.second;
+
+			setVideoInfo({src: sourceUrl, timestamp: timeInSec});
+			setTabIndex(1); // Video Player 탭 전환
+		}
+	} catch (e) {
+		console.error('영상 불러오기 실패', e);
+	}
+};
 
 	const handleLoginSuccess = () => {
 		setIsLoggedIn(true);
@@ -57,15 +74,8 @@ const Main = (props) => {
 					{/* eslint-disable-next-line */}
 					{isLoggedIn ? <Home onVideoSelect={handleVideoSelect} /> : null}
 				</Tab>
-				<Tab title={$L('HLS Video Player')}>
-					{isLoggedIn ? (
-						<HLSVideo
-							src={
-								videoSrc ||
-								"https://cdn-vos-ppp-01.vos360.video/Content/HLS_HLSCLEAR/Live/channel(PPP-LL-2HLS)/index.m3u8"
-							}
-						/>
-					) : null}
+				<Tab title={$L('Video Player')}>
+					<Video src={videoInfo.src} timestamp={videoInfo.timestamp} />
 				</Tab>
 				<Tab title={$L('Account')}>
 					{/* eslint-disable-next-line */}

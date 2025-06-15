@@ -3,6 +3,7 @@ import VirtualGridList from '@enact/sandstone/VirtualList';
 import ImageItem from '@enact/sandstone/ImageItem';
 
 const dummyData = new Array(100).fill(null).map((_, i) => ({
+	videoId: i,
 	title: `영상 ${i}`,
 	label: `조회수 ${Math.floor(Math.random() * 10)}회`,
 	src: {
@@ -27,7 +28,7 @@ const Home = ({onVideoSelect}) => {
 					height: '12.25rem',
 					width:  '15rem'
 				}}
-				onClick={() => onVideoSelect(item.src.uhd)} // ✅ 클릭 시 상위로 전달
+				onClick={() => onVideoSelect(item.videoId)} // ✅ 클릭 시 상위로 전달
 			>
 				{item.title}
 			</ImageItem>

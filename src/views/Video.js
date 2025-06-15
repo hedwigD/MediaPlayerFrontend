@@ -1,8 +1,18 @@
 import VideoPlayer from '@enact/sandstone/VideoPlayer';
 import {MediaControls} from '@enact/sandstone/MediaPlayer';
 import Button from '@enact/sandstone/Button';
+import {useRef, useEffect} from 'react';
 
-const Video = (prop) => {
+const Video = ({src, timestamp = 0}) => {
+	const videoRef = useRef(null);
+
+	useEffect(() => {
+		const video = videoRef.current;
+		if (video && timestamp > 0) {
+			video.currentTime = timestamp;
+		}
+	}, [timestamp, src]);
+
 	return (
 		<div
 			style={{
@@ -16,7 +26,8 @@ const Video = (prop) => {
 			}}
 		>
 			<VideoPlayer
-				autoCloseTimeout={7000} // 재생 바(마우스 올리면 나오는거) 떴다가 사라지는 시간
+				ref={videoRef}
+				autoCloseTimeout={7000}
 				backButtonAriaLabel="go to previous"
 				feedbackHideDelay={30}
 				initialJumpDelay={400}
@@ -24,13 +35,12 @@ const Video = (prop) => {
 				loop
 				miniFeedbackHideDelay={2000}
 				muted
-				title="Sandstone VideoPlayer Sample Video"
+				title="재생 중인 영상"
 				titleHideDelay={4000}
 			>
-				<source src={prop.src} type="video/mp4" />
+				<source src={src} type="video/mp4" />
 				<infoComponents>
 					A video about some things happening to and around some characters.
-					Very exciting stuff.
 				</infoComponents>
 				<MediaControls
 					jumpBackwardIcon="jumpbackward"
