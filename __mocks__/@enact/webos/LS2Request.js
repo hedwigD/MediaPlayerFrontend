@@ -66,7 +66,6 @@ class LS2Request {
 
 			onComplete(res);
 		} catch (err) {
-			 
 			console.log({service, method, parameters});
 			onFailure(err);
 			onComplete(err);

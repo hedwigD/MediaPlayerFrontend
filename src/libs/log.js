@@ -12,7 +12,6 @@ const debugLog = (msgId, values) => {
 	}
 
 	if (['development', 'test'].includes(process.env.NODE_ENV)) {
-		 
 		console.log(id, values);
 	}
 };
