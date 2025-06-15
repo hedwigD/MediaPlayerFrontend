@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 import TabLayout, {Tab} from '@enact/sandstone/TabLayout';
 import {Header, Panel} from '@enact/sandstone/Panels';
 import $L from '@enact/i18n/$L';
@@ -14,13 +14,21 @@ import Summary from './Summary';
 
 const Main = (props) => {
 	const [tabIndex, setTabIndex] = useState(3); // 기본 Account 탭
-	const [isLoggedIn, setIsLoggedIn] = useState(true);
+	const [token, setToken] = useState(null); 
+	const [isLoggedIn, setIsLoggedIn] = useState(false);
 	const [videoInfo, setVideoInfo] = useState({
 		src: '',
 		timestamp: 0
 	});
 	const [currentVideoId, setCurrentVideoId] = useState(null);
 
+	useEffect(() => {
+		if (token) {
+		axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+		} else {
+		delete axios.defaults.headers.common['Authorization'];
+		}
+	}, [token]);
 
 	const handleVideoSelect = async (videoId) => {
 		setCurrentVideoId(videoId);
@@ -39,7 +47,9 @@ const Main = (props) => {
 		}
 	};
 
-	const handleLoginSuccess = () => {
+	const handleLoginSuccess = (newToken) => {
+		console.log('[Main] received token:', newToken);
+		setToken(newToken);
 		setIsLoggedIn(true);
 		setTabIndex(0); // 로그인 후 Home으로 이동
 	};
@@ -74,8 +84,12 @@ const Main = (props) => {
 				onSelect={({index}) => setTabIndex(forceToLoginTab(index))}
 			>
 				<Tab title={$L('Home')}>
-					{/* eslint-disable-next-line */}
-					{isLoggedIn ? <Home onVideoSelect={handleVideoSelect} /> : null}
+					{isLoggedIn &&
+						<Home
+							token={token}                     // ← 여기 추가
+							onVideoSelect={handleVideoSelect}
+						/>
+					}
 				</Tab>
 				<Tab title={$L('Video Player')}>
 					{isLoggedIn ? (
@@ -90,9 +104,13 @@ const Main = (props) => {
 						/>
 					) : null}
 				</Tab>
-				<Tab title={$L('재생목록')}>
-					{/* eslint-disable-next-line */}
-					<Playlist onVideoSelect={handleVideoSelect} />
+   				<Tab title={$L('재생목록')}>
+					{isLoggedIn &&
+					<Playlist
+						token={token}                    // ← 여기에 token prop 추가
+						onVideoSelect={handleVideoSelect}
+					/>
+					}
 				</Tab>
 				<Tab title={$L('Account')}>
 					{/* eslint-disable-next-line */}

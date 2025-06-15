@@ -27,6 +27,8 @@
 	"useNativeScroll": true,
 	"visible": true,
 	"requiredPermissions": [
+	"network.operation",
+	"networkstatus",
 	"com.webos.service.tv.systemmonitor"
 	]
 }

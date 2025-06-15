@@ -1,88 +1,200 @@
-import {useState} from 'react';
+// src/views/Playlist.js
+import React, { useState, useEffect } from 'react';
 import VirtualGridList from '@enact/sandstone/VirtualList';
 import ImageItem from '@enact/sandstone/ImageItem';
+import Popup from '@enact/sandstone/Popup';
+import Input from '@enact/sandstone/Input';
+import Button from '@enact/sandstone/Button';
+import axios from 'axios';
 
-// 샘플 재생목록들
-const playlistData = [
-  {id: 'drama', title: '드라마 모음', thumbnail: 'https://picsum.photos/seed/drama/300/300'},
-  {id: 'variety', title: '예능 모음', thumbnail: 'https://picsum.photos/seed/variety/300/300'}
-];
+const API_ROOT = 'http://15.165.123.189:8080';
 
-// 각 재생목록별 영상들
-const videosByPlaylist = {
-  drama: [
-    {id: 1, title: '드라마1', src: 'https://media.w3.org/2010/05/sintel/trailer.mp4'},
-    {id: 2, title: '드라마2', src: 'https://media.w3.org/2010/05/sintel/trailer.mp4'}
-  ],
-  variety: [
-    {id: 3, title: '예능1', src: 'https://media.w3.org/2010/05/sintel/trailer.mp4'},
-    {id: 4, title: '예능2', src: 'https://media.w3.org/2010/05/sintel/trailer.mp4'}
-  ]
-};
+const Playlist = ({ token, onVideoSelect }) => {
+  const [playlists, setPlaylists] = useState([]);
+  const [selectedPlaylistIdx, setIndex] = useState(null);
+  const [showDialog, setShowDialog] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
 
-const Playlist = ({onVideoSelect}) => {
-  const [selectedPlaylist, setSelectedPlaylist] = useState(null);
+  // 내 + 공개 재생목록 조회
+  useEffect(() => {
+    console.log('[Playlist] fetching playlists with token:', token);
+    const headers = { Authorization: `Bearer ${token}` };
+    Promise.all([
+      axios.get(`${API_ROOT}/playlists/my`, { headers }),
+      axios.get(`${API_ROOT}/playlists/public`, { headers }),
+    ])
+      .then(([my, pub]) => {
+        console.log('[Playlist] responses:', my.data, pub.data);
+        const myList = my.data.isSuccess ? my.data.result : [];
+        const pubList = pub.data.isSuccess ? pub.data.result : [];
+        const merged = [...myList, ...pubList].reduce((acc, p) => {
+          if (!acc.some(x => x.playlistId === p.playlistId)) acc.push(p);
+          return acc;
+        }, []);
+        setPlaylists(merged);
+      })
+      .catch(err => {
+        console.error('[Playlist] fetch error:', err);
+        setPlaylists([]);
+      });
+  }, [token]);
 
-  const showLists = !selectedPlaylist;
+  // 재생목록 생성
+  const handleCreate = () => {
+    if (!newTitle) {
+      console.warn('[Playlist] 제목이 비어있습니다.');
+      return;
+    }
 
-  const renderPlaylist = ({index, ...rest}) => {
-    const item = playlistData[index];
-    return (
-      <ImageItem
-        {...rest}
-        src={item.thumbnail}
-        label={item.title}
-        orientation="vertical"
-        onClick={() => setSelectedPlaylist(item.id)}
-        style={{height: '12rem', width: '14rem'}}
-      >
-        {item.title}
-      </ImageItem>
-    );
+    axios
+      .post(
+        `${API_ROOT}/playlists`,
+        {
+          title: newTitle,
+          status: 'PUBLIC', // 필수 필드 추가됨
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+      .then(res => {
+        console.log('[Playlist] 생성 성공:', res.data);
+        setShowDialog(false);
+        setNewTitle('');
+        setIndex(null);
+
+        const headers = { Authorization: `Bearer ${token}` };
+        Promise.all([
+          axios.get(`${API_ROOT}/playlists/my`, { headers }),
+          axios.get(`${API_ROOT}/playlists/public`, { headers }),
+        ]).then(([my, pub]) => {
+          const myList = my.data.isSuccess ? my.data.result : [];
+          const pubList = pub.data.isSuccess ? pub.data.result : [];
+          const merged = [...myList, ...pubList].reduce((acc, p) => {
+            if (!acc.some(x => x.playlistId === p.playlistId)) acc.push(p);
+            return acc;
+          }, []);
+          setPlaylists(merged);
+        });
+      })
+      .catch(err => {
+        console.error('[Playlist] 생성 실패:', err.response || err);
+        setShowDialog(false);
+      });
   };
 
-  const renderVideos = ({index, ...rest}) => {
-    const videos = videosByPlaylist[selectedPlaylist] || [];
+  const renderItem = ({ index, ...rest }) => {
+    // 선택 전 (재생목록 목록)
+    if (selectedPlaylistIdx == null) {
+      if (index === 0) {
+        return (
+          <ImageItem
+            {...rest}
+            orientation="vertical"
+            label="+ 새 재생목록"
+            style={{ height: '12rem', width: '14rem' }}
+            onClick={() => setShowDialog(true)}
+          >
+            새 재생목록
+          </ImageItem>
+        );
+      }
+      const playlist = playlists[index - 1];
+      return playlist ? (
+        <ImageItem
+          {...rest}
+          orientation="vertical"
+          label={playlist.title}
+          style={{ height: '12rem', width: '14rem' }}
+          onClick={() => setIndex(index - 1)}
+        >
+          {playlist.title}
+        </ImageItem>
+      ) : null;
+    }
 
-    // 첫 칸은 뒤로가기 버튼
+    // 선택 후 (재생목록 내부 영상들)
     if (index === 0) {
       return (
         <ImageItem
           {...rest}
-          label="← 목록으로"
           orientation="vertical"
-          onClick={() => setSelectedPlaylist(null)}
-          style={{height: '12rem', width: '14rem'}}
+          label="◀ 재생목록으로 돌아가기"
+          style={{ height: '12rem', width: '14rem' }}
+          onClick={() => setIndex(null)}
         >
-          뒤로가기
+          뒤로
         </ImageItem>
       );
     }
-
-    const video = videos[index - 1];
-    return (
+    const video =
+      playlists[selectedPlaylistIdx]?.videoDetailList[index - 1];
+    return video ? (
       <ImageItem
         {...rest}
-        src={`https://picsum.photos/seed/${video.id}/300/300`}
-        label={video.title}
         orientation="vertical"
-        onClick={() => onVideoSelect(video.src)}
-        style={{height: '12rem', width: '14rem'}}
+        src={{
+          fhd: video.thumbnailUrl,
+          hd: video.thumbnailUrl,
+          uhd: video.sourceUrl,
+        }}
+        label={video.title}
+        style={{ height: '12rem', width: '14rem' }}
+        onClick={() => onVideoSelect(video.videoId)}
       >
         {video.title}
       </ImageItem>
-    );
+    ) : null;
   };
 
+  const dataSize =
+    selectedPlaylistIdx == null
+      ? playlists.length + 1
+      : (playlists[selectedPlaylistIdx]?.videoDetailList.length || 0) + 1;
+
   return (
-    <VirtualGridList
-      dataSize={showLists ? playlistData.length : videosByPlaylist[selectedPlaylist].length + 1}
-      itemRenderer={showLists ? renderPlaylist : renderVideos}
-      itemSize={{minWidth: 400, minHeight: 294}}
-      spacing={24}
-      direction="vertical"
-      scrollMode="native"
-    />
+    <>
+      <VirtualGridList
+        dataSize={dataSize}
+        itemRenderer={renderItem}
+        itemSize={{ minWidth: 400, minHeight: 294 }}
+        spacing={24}
+        direction="vertical"
+        scrollMode="native"
+        spotlightDisabled={showDialog}
+      />
+
+      <Popup
+        open={showDialog}
+        onClose={() => setShowDialog(false)}
+        title="새 재생목록 생성"
+        spotlightRestrict="self-first"
+        noAutoDismiss
+        scrimType="transparent"
+      >
+        <Input
+          placeholder="재생목록 이름"
+          value={newTitle}
+          onChange={ev => setNewTitle(ev.value)}
+        />
+        <div
+          style={{
+            marginTop: '1rem',
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '1rem',
+          }}
+        >
+          <Button onClick={handleCreate} disabled={!newTitle}>
+            생성
+          </Button>
+          <Button onClick={() => setShowDialog(false)}>취소</Button>
+        </div>
+      </Popup>
+    </>
   );
 };
 

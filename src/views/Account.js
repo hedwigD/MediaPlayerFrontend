@@ -31,11 +31,11 @@ const Account = ({ onLoginSuccess }) => {
       };
       try {
         const response = await axios.post(url, payload, { headers: { 'Content-Type': 'application/json' } });
-        const token = response.headers['authorization'] || response.headers['Authorization'];
+        const token = response.headers['authorization']?.replace('Bearer ','') || response.headers['Authorization']?.replace('Bearer ','');
         if (response.status === 200 && token) {
           localStorage.setItem('accessToken', token);
           setMessage('로그인 성공');
-          onLoginSuccess?.();
+          onLoginSuccess?.(token);
         } else {
           setMessage('로그인 실패: 토큰이 없습니다.');
         }
