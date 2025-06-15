@@ -131,7 +131,7 @@ const Main = (props) => {
 					<Account onLoginSuccess={handleLoginSuccess} />
 				</Tab>
 				<Tab title={$L('My Page')}>
-					{isLoggedIn ? <Profile /> : null}
+					{isLoggedIn ? <Profile token={token} /> : null}
 				</Tab>
 				<Tab title={$L('요약')}>
 					{isLoggedIn ? <Summary videoId={currentVideoId} /> : null}
