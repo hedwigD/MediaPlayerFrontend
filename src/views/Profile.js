@@ -1,258 +1,234 @@
 import PropTypes from 'prop-types';
-import { Component, createRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Panel } from '@enact/sandstone/Panels';
 import Scroller from '@enact/sandstone/Scroller';
 import { InputField } from '@enact/sandstone/Input';
 import Heading from '@enact/sandstone/Heading';
 import Button from '@enact/sandstone/Button';
 import Alert from '@enact/sandstone/Alert';
-import axios from 'axios'; // axios import
+import axios from 'axios';
 
 import './profile.css';
 
 import avatar2 from './assets/avatar2.jpg';
 import avatar3 from './assets/avatar3.jpg';
 
-class Profile extends Component {
-  static propTypes = {
-    userName: PropTypes.string,
-    userEmail: PropTypes.string,
-    bio: PropTypes.string,
-    profileImage: PropTypes.string,
-    onChangeBio: PropTypes.func.isRequired,
-    onSelectAvatar: PropTypes.func.isRequired,
-    onClickAddAvatar: PropTypes.func.isRequired
-  };
+const Profile = ({
+  token,
+  onChangeBio = () => {},
+  onSelectAvatar = () => {},
+  onClickAddAvatar = () => {}
+}) => {
+  const avatarSources = [
+    avatar2, avatar3, avatar2, avatar3,
+    avatar2, avatar3, avatar2,
+  ];
 
-  constructor(props) {
-    super(props);
+  // 서버에서 받아오는 사용자 정보 state
+  const [userName, setUserName] = useState('');
+  const [userEmail, setUserEmail] = useState('');
+  const [mainPhoto, setMainPhoto] = useState(avatar2);
+  const [localBio, setLocalBio] = useState('');
 
-    this.avatarSources = [
-      avatar2, avatar3, avatar2, avatar3,
-      avatar2, avatar3, avatar2,
-    ];
+  const [showAlert, setShowAlert] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const fileInputRef = useRef(null);
 
-    this.state = {
-      mainPhoto: props.profileImage || avatar2,
-      localBio: props.bio || '',
-      showAlert: false,    // Alert 표시 상태 추가
-      showError: false,    // Error 표시 상태 추가
-      errorMessage: '',    // Error 메시지
-    };
-
-    this.fileInputRef = createRef();
-
-    // 핸들러 바인딩
-    this.handleBioChange = this.handleBioChange.bind(this);
-    this.handleAvatarClick = this.handleAvatarClick.bind(this);
-    this.handleAddAvatarClick = this.handleAddAvatarClick.bind(this);
-    this.handleFileInputChange = this.handleFileInputChange.bind(this);
-    this.handleShowAlert = this.handleShowAlert.bind(this);
-    this.handleCloseAlert = this.handleCloseAlert.bind(this);
-    this.handleSave = this.handleSave.bind(this);  // 저장 버튼 핸들러
-  }
-
-  componentDidMount() {
-    // 회원 정보 GET 요청하여 정보 가져오기
-    axios.get('/members/my', {
+  // 회원 정보 받아오기
+  useEffect(() => {
+    if (!token) return;
+    axios.get('http://15.165.123.189:8080/members/my', {
       headers: {
-        'Authorization': 'Bearer eyJhbGciOiJIUzM4NCJ9.eyJ1c2VybmFtZSI6InRlc3RAZXhhbXBsZS5jb20iLCJyb2xlIjoiUk9MRV9VU0VSIiwibWVtYmVySWQiOjEsImlhdCI6MTc0OTk4NDI0NiwiZXhwIjoxNzUwMDIwMjQ2fQ.tAKiDemafXT43wiWvNSNi-z2Lw5dCYbx0Es69EY4WHYRQNBqzQqOQ8-qker0y0vV ',  // 실제 토큰을 넣어야 합니다.
+        'Authorization': `${token}`,
       }
     })
     .then(response => {
       if (response.data.isSuccess) {
         const userData = response.data.result;
-        this.setState({
-          mainPhoto: userData.profileImageUrl,
-          localBio: userData.description,
-        });
+        setUserName(userData.nickname || '');
+        setUserEmail(userData.email || '');
+        setMainPhoto(userData.profileImageUrl || avatar2);
+        setLocalBio(userData.description || '');
       }
     })
     .catch(error => {
-      console.error("회원 정보를 가져오는 데 실패했습니다:", error);
+      setShowError(true);
+      setErrorMessage("회원 정보를 가져오는 데 실패했습니다.");
+      console.error(error);
     });
-  }
+  }, [token]);
 
-  handleBioChange(ev) {
-    const newBio = ev.value;
-    this.setState({ localBio: newBio });
-    this.props.onChangeBio(newBio);
-  }
+  const handleBioChange = (ev) => {
+    setLocalBio(ev.value);
+    onChangeBio(ev.value);
+  };
 
-  handleAvatarClick(idx) {
-    const src = this.avatarSources[idx];
-    this.setState({ mainPhoto: src });
-    if (this.props.onSelectAvatar) {
-      this.props.onSelectAvatar(idx);
+  const handleAvatarClick = (idx) => {
+    const src = avatarSources[idx];
+    setMainPhoto(src);
+    onSelectAvatar(idx);
+  };
+
+  const handleAddAvatarClick = () => {
+    if (fileInputRef && fileInputRef.current) {
+      fileInputRef.current.click();
     }
-  }
+  };
 
-  handleAddAvatarClick() {
-    if (this.fileInputRef && this.fileInputRef.current) {
-      this.fileInputRef.current.click();
-    }
-  }
-
-  handleFileInputChange(ev) {
+  const handleFileInputChange = (ev) => {
     const file = ev.target.files[0];
     if (file) {
       const objectUrl = URL.createObjectURL(file);
-      this.setState({ mainPhoto: objectUrl });
-      if (this.props.onClickAddAvatar) {
-        this.props.onClickAddAvatar();
-      }
+      setMainPhoto(objectUrl);
+      onClickAddAvatar();
     }
-    ev.target.value = ''; // 동일 파일 재업로드 허용
-  }
+    ev.target.value = '';
+  };
 
-  handleShowAlert() {
-    this.setState({ showAlert: true });
-  }
-
-  handleCloseAlert() {
-    this.setState({ showAlert: false });
-  }
-
-  handleSave() {
-    const { localBio, mainPhoto } = this.state;
-    // eslint-disable-next-line
-    const updatedInfo = {
-      description: localBio,
-      profileImage: mainPhoto,
-    };
-
+  const handleSave = () => {
     const formData = new FormData();
-    formData.append('profileImage', mainPhoto);  // 이미지 파일
-    formData.append('description', localBio);  // 수정된 자기소개
+    // 실제 서비스에서는 file 객체여야 함 (여기선 objectUrl임에 주의)
+    formData.append('profileImage', mainPhoto);
+    formData.append('description', localBio);
 
-    axios.post('/members/my', formData, {
+    axios.post('http://15.165.123.189:8080/members/my', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
-        'Authorization': 'Bearer your_access_token', // 실제 토큰을 넣어야 합니다.
+        'Authorization': `${token}`,
       }
     })
     .then(response => {
       if (response.data.isSuccess) {
-        this.setState({ showAlert: true, showError: false });
+        setShowAlert(true);
+        setShowError(false);
       } else {
-        this.setState({ showError: true, errorMessage: response.data.message });
+        setShowError(true);
+        setErrorMessage(response.data.message);
       }
     })
     // eslint-disable-next-line
     .catch(error => {
-      this.setState({ showError: true, errorMessage: '서버와 연결할 수 없습니다. 다시 시도해주세요.' });
+      setShowError(true);
+      setErrorMessage('서버와 연결할 수 없습니다. 다시 시도해주세요.');
     });
-  }
+  };
 
-  render() {
-    const {
-      userName = '시원',
-      userEmail = 'pso9789@yonsei.ac.kr'
-    } = this.props;
-    const { mainPhoto, localBio, showAlert, showError, errorMessage } = this.state;
-    const avatars = this.avatarSources;
+  const handleCloseAlert = () => setShowAlert(false);
 
-    return (
-      <Panel>
-        <Scroller>
-          <div className="profile-container">
-            <Heading className="profile-title">프로필</Heading>
-            <div className="profile-top">
-              <img
-                src={mainPhoto}
-                alt="프로필 사진"
-                className="profile-photo"
-              />
-              <div className="profile-avatar-list">
-                {avatars.map((src, i) => (
-                  <Button
-                    className="profile-avatar-button"
-                    key={i}
-                    size="small"
-                    // eslint-disable-next-line
-                    onClick={this.handleAvatarClick.bind(this, i)}
-                    aria-label={`아바타 ${i + 1}`}
-                  >
-                    <img
-                      src={src}
-                      alt={`avatar-${i + 1}`}
-                    />
-                  </Button>
-                ))}
+  return (
+    <Panel>
+      <Scroller>
+        <div className="profile-container">
+          <Heading className="profile-title">프로필</Heading>
+          <div className="profile-top">
+            <img
+              src={mainPhoto}
+              alt="프로필 사진"
+              className="profile-photo"
+            />
+            <div className="profile-avatar-list">
+              {avatarSources.map((src, i) => (
                 <Button
+                  className="profile-avatar-button"
+                  key={i}
                   size="small"
-                  className="file-upload-button"
-                  onClick={this.handleAddAvatarClick}
-                  aria-label="프로필 사진 업로드"
+                  // eslint-disable-next-line
+                  onClick={() => handleAvatarClick(i)}
+                  aria-label={`아바타 ${i + 1}`}
                 >
-                  &nbsp; +
+                  <img
+                    src={src}
+                    alt={`avatar-${i + 1}`}
+                  />
                 </Button>
-                <input
-                  type="file"
-                  ref={this.fileInputRef}
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  onChange={this.handleFileInputChange}
-                />
-              </div>
-            </div>
-            <div className="profile-info">
-              <div className="profile-info-label">이름</div>
-              <div className="profile-info-value">{userName}</div>
-              <div className="profile-info-label">이메일</div>
-              <div className="profile-info-value">{userEmail}</div>
-            </div>
-            <div>
-              <div className="profile-bio-label">소개글</div>
-              <InputField
-                placeholder="자기소개를 입력하세요."
-                component="textarea"
-                className="profile-bio-textarea"
-                value={localBio}
-                onChange={this.handleBioChange}
-              />
-            </div>
-            {/* Alert 버튼/팝업 */}
-            <div className="profile-footer">
+              ))}
               <Button
                 size="small"
-                className="profile-save-button"
-                onClick={this.handleSave}
+                className="file-upload-button"
+                // eslint-disable-next-line
+                onClick={handleAddAvatarClick}
+                aria-label="프로필 사진 업로드"
               >
-                저장
+                &nbsp; +
               </Button>
-              {showAlert && (
-                <Alert
-                  type="fullscreen"
-                  // eslint-disable-next-line
-                  open={true}
-                  // eslint-disable-next-line
-                  onClose={this.handleCloseAlert}
-                  title="알림"
-                >
-                  <buttons>
-                    <Button onClick={this.handleCloseAlert}>확인</Button>
-                  </buttons>
-                  저장되었습니다!
-                </Alert>
-              )}
-              {showError && (
-                <Alert
-                  type="fullscreen"
-                  // eslint-disable-next-line
-                  open={true}
-                  onClose={this.handleCloseAlert}
-                  title="오류"
-                >
-                  {errorMessage}
-                </Alert>
-              )}
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                style={{ display: 'none' }}
+                // eslint-disable-next-line
+                onChange={handleFileInputChange}
+              />
             </div>
           </div>
-        </Scroller>
-      </Panel>
-    );
-  }
-}
+          <div className="profile-info">
+            <div className="profile-info-label">이름</div>
+            <div className="profile-info-value">{userName}</div>
+            <div className="profile-info-label">이메일</div>
+            <div className="profile-info-value">{userEmail}</div>
+          </div>
+          <div>
+            <div className="profile-bio-label">소개글</div>
+            <InputField
+              placeholder="자기소개를 입력하세요."
+              component="textarea"
+              className="profile-bio-textarea"
+              value={localBio}
+              // eslint-disable-next-line
+              onChange={handleBioChange}
+            />
+          </div>
+          {/* Alert 버튼/팝업 */}
+          <div className="profile-footer">
+            <Button
+              size="small"
+              className="profile-save-button"
+              // eslint-disable-next-line
+              onClick={handleSave}
+            >
+              저장
+            </Button>
+            {showAlert && (
+              <Alert
+                type="fullscreen"
+                // eslint-disable-next-line
+                open={true}
+                // eslint-disable-next-line
+                onClose={handleCloseAlert}
+                title="알림"
+              >
+                <buttons>
+                  {/* eslint-disable-next-line */}
+                  <Button onClick={handleCloseAlert}>확인</Button>
+                </buttons>
+                저장되었습니다!
+              </Alert>
+            )}
+            {showError && (
+              <Alert
+                type="fullscreen"
+                // eslint-disable-next-line
+                open={true}
+                // eslint-disable-next-line
+                onClose={handleCloseAlert}
+                title="오류"
+              >
+                {errorMessage}
+              </Alert>
+            )}
+          </div>
+        </div>
+      </Scroller>
+    </Panel>
+  );
+};
+
+Profile.propTypes = {
+  token: PropTypes.string.isRequired,
+  onChangeBio: PropTypes.func,
+  onSelectAvatar: PropTypes.func,
+  onClickAddAvatar: PropTypes.func,
+};
 
 export default Profile;
