@@ -10,31 +10,34 @@ import axios from 'axios';
 import Video from './Video';
 import Icon from '@enact/sandstone/Icon';
 import Playlist from './Playlist';
+import Summary from './Summary';
 
 const Main = (props) => {
 	const [tabIndex, setTabIndex] = useState(3); // 기본 Account 탭
-	const [isLoggedIn, setIsLoggedIn] = useState(false);
+	const [isLoggedIn, setIsLoggedIn] = useState(true);
 	const [videoInfo, setVideoInfo] = useState({
 		src: '',
 		timestamp: 0
 	});
+	const [currentVideoId, setCurrentVideoId] = useState(null);
 
 
 	const handleVideoSelect = async (videoId) => {
-	try {
-		const res = await axios.get(`http://your.api/videos/${videoId}`);
-		if (res.data.isSuccess) {
-			const {sourceUrl, timestamp} = res.data.result;
-			const timeInSec =
-				timestamp.hour * 3600 + timestamp.minute * 60 + timestamp.second;
+		setCurrentVideoId(videoId);
+		setTabIndex(1);
+		try {
+			const res = await axios.get(`http://your.api/videos/${videoId}`);
+			if (res.data.isSuccess) {
+				const {sourceUrl, timestamp} = res.data.result;
+				const timeInSec =
+					timestamp.hour * 3600 + timestamp.minute * 60 + timestamp.second;
 
-			setVideoInfo({src: sourceUrl, timestamp: timeInSec});
-			setTabIndex(1); // Video Player 탭 전환
+				setVideoInfo({src: sourceUrl, timestamp: timeInSec});
+			}
+		} catch (e) {
+			console.error('영상 불러오기 실패', e);
 		}
-	} catch (e) {
-		console.error('영상 불러오기 실패', e);
-	}
-};
+	};
 
 	const handleLoginSuccess = () => {
 		setIsLoggedIn(true);
@@ -76,7 +79,15 @@ const Main = (props) => {
 				</Tab>
 				<Tab title={$L('Video Player')}>
 					{isLoggedIn ? (
-						<Video src={videoInfo.src} timestamp={videoInfo.timestamp} />
+						<Video
+							src={videoInfo.src}
+							timestamp={videoInfo.timestamp}
+							videoId={currentVideoId}
+							onViewSummary={(id) => {
+								setCurrentVideoId(id);
+								setTabIndex(5);
+							}}
+						/>
 					) : null}
 				</Tab>
 				<Tab title={$L('재생목록')}>
@@ -89,6 +100,9 @@ const Main = (props) => {
 				</Tab>
 				<Tab title={$L('My Page')}>
 					{isLoggedIn ? <Profile /> : null}
+				</Tab>
+				<Tab title={$L('요약')}>
+					{isLoggedIn ? <Summary videoId={currentVideoId} /> : null}
 				</Tab>
 				<Tab title={$L('Status')}>
 					{isLoggedIn ? <SystemStatus /> : null}

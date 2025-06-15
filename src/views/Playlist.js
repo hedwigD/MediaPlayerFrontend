@@ -33,7 +33,6 @@ const Playlist = ({onVideoSelect}) => {
         src={item.thumbnail}
         label={item.title}
         orientation="vertical"
-        // eslint-disable-next-line
         onClick={() => setSelectedPlaylist(item.id)}
         style={{height: '12rem', width: '14rem'}}
       >
@@ -52,7 +51,6 @@ const Playlist = ({onVideoSelect}) => {
           {...rest}
           label="← 목록으로"
           orientation="vertical"
-          // eslint-disable-next-line
           onClick={() => setSelectedPlaylist(null)}
           style={{height: '12rem', width: '14rem'}}
         >
@@ -68,7 +66,6 @@ const Playlist = ({onVideoSelect}) => {
         src={`https://picsum.photos/seed/${video.id}/300/300`}
         label={video.title}
         orientation="vertical"
-        // eslint-disable-next-line
         onClick={() => onVideoSelect(video.src)}
         style={{height: '12rem', width: '14rem'}}
       >
