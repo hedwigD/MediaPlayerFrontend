@@ -68,6 +68,7 @@ const Video = ({src, timestamp = 0}) => {
 					pauseIcon="pause"
 					playIcon="play"
 				>
+					{/* eslint-disable-next-line */}
 					<Button icon="camera" size="small" onClick={handleCapture}>캡처</Button>
 				</MediaControls>
 			</VideoPlayer>

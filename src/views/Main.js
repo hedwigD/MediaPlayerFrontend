@@ -12,7 +12,7 @@ import Icon from '@enact/sandstone/Icon';
 import Playlist from './Playlist';
 
 const Main = (props) => {
-	const [tabIndex, setTabIndex] = useState(2); // 기본 Account 탭
+	const [tabIndex, setTabIndex] = useState(3); // 기본 Account 탭
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
 	const [videoInfo, setVideoInfo] = useState({
 		src: '',
@@ -42,8 +42,8 @@ const Main = (props) => {
 	};
 
 	const forceToLoginTab = (index) => {
-		if (!isLoggedIn && index !== 2) {
-			return 2;
+		if (!isLoggedIn && index !== 3) {
+			return 3;
 		}
 		return index;
 	};
@@ -80,6 +80,7 @@ const Main = (props) => {
 					) : null}
 				</Tab>
 				<Tab title={$L('재생목록')}>
+					{/* eslint-disable-next-line */}
 					<Playlist onVideoSelect={handleVideoSelect} />
 				</Tab>
 				<Tab title={$L('Account')}>

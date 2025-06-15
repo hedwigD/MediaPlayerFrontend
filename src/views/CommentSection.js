@@ -3,7 +3,7 @@ import {InputField} from '@enact/sandstone/Input';
 import Button from '@enact/sandstone/Button';
 import Scroller from '@enact/sandstone/Scroller';
 import BodyText from '@enact/sandstone/BodyText';
-
+// eslint-disable-next-line
 const CommentSection = ({videoId}) => {
 	const [comments, setComments] = useState([
 		{
@@ -45,9 +45,11 @@ const CommentSection = ({videoId}) => {
 				<InputField
 					placeholder="댓글을 입력하세요"
 					value={inputValue}
+					// eslint-disable-next-line
 					onChange={(e) => setInputValue(e.value)}
 					style={{flex: 1}}
 				/>
+				{/* eslint-disable-next-line */}
 				<Button onClick={handleAddComment}>등록</Button>
 			</div>
 			<Scroller style={{maxHeight: '300px'}}>
@@ -55,6 +57,7 @@ const CommentSection = ({videoId}) => {
 					<div key={commentId} style={{marginBottom: '1rem', borderBottom: '1px solid #444'}}>
 						<BodyText>{memberNickname} | {new Date(createdAt).toLocaleString()}</BodyText>
 						<BodyText>{comment}</BodyText>
+						{/* eslint-disable-next-line */}
 						<Button size="small" onClick={() => handleDelete(commentId)}>삭제</Button>
 					</div>
 				))}

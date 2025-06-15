@@ -1,13 +1,12 @@
-// src/components/ProfilePanel.js
-
 import PropTypes from 'prop-types';
-import {Component, createRef} from 'react';
-import {Panel} from '@enact/sandstone/Panels';
+import { Component, createRef } from 'react';
+import { Panel } from '@enact/sandstone/Panels';
 import Scroller from '@enact/sandstone/Scroller';
-import {InputField} from '@enact/sandstone/Input';
+import { InputField } from '@enact/sandstone/Input';
 import Heading from '@enact/sandstone/Heading';
 import Button from '@enact/sandstone/Button';
 import Alert from '@enact/sandstone/Alert';
+import axios from 'axios'; // axios import
 
 import './profile.css';
 
@@ -19,6 +18,7 @@ class Profile extends Component {
     userName: PropTypes.string,
     userEmail: PropTypes.string,
     bio: PropTypes.string,
+    profileImage: PropTypes.string,
     onChangeBio: PropTypes.func.isRequired,
     onSelectAvatar: PropTypes.func.isRequired,
     onClickAddAvatar: PropTypes.func.isRequired
@@ -33,9 +33,11 @@ class Profile extends Component {
     ];
 
     this.state = {
-      mainPhoto: avatar2,
+      mainPhoto: props.profileImage || avatar2,
       localBio: props.bio || '',
-      showAlert: false    // Alert 표시 상태 추가
+      showAlert: false,    // Alert 표시 상태 추가
+      showError: false,    // Error 표시 상태 추가
+      errorMessage: '',    // Error 메시지
     };
 
     this.fileInputRef = createRef();
@@ -47,17 +49,39 @@ class Profile extends Component {
     this.handleFileInputChange = this.handleFileInputChange.bind(this);
     this.handleShowAlert = this.handleShowAlert.bind(this);
     this.handleCloseAlert = this.handleCloseAlert.bind(this);
+    this.handleSave = this.handleSave.bind(this);  // 저장 버튼 핸들러
+  }
+
+  componentDidMount() {
+    // 회원 정보 GET 요청하여 정보 가져오기
+    axios.get('/members/my', {
+      headers: {
+        'Authorization': 'Bearer eyJhbGciOiJIUzM4NCJ9.eyJ1c2VybmFtZSI6InRlc3RAZXhhbXBsZS5jb20iLCJyb2xlIjoiUk9MRV9VU0VSIiwibWVtYmVySWQiOjEsImlhdCI6MTc0OTk4NDI0NiwiZXhwIjoxNzUwMDIwMjQ2fQ.tAKiDemafXT43wiWvNSNi-z2Lw5dCYbx0Es69EY4WHYRQNBqzQqOQ8-qker0y0vV ',  // 실제 토큰을 넣어야 합니다.
+      }
+    })
+    .then(response => {
+      if (response.data.isSuccess) {
+        const userData = response.data.result;
+        this.setState({
+          mainPhoto: userData.profileImageUrl,
+          localBio: userData.description,
+        });
+      }
+    })
+    .catch(error => {
+      console.error("회원 정보를 가져오는 데 실패했습니다:", error);
+    });
   }
 
   handleBioChange(ev) {
     const newBio = ev.value;
-    this.setState({localBio: newBio});
+    this.setState({ localBio: newBio });
     this.props.onChangeBio(newBio);
   }
 
   handleAvatarClick(idx) {
     const src = this.avatarSources[idx];
-    this.setState({mainPhoto: src});
+    this.setState({ mainPhoto: src });
     if (this.props.onSelectAvatar) {
       this.props.onSelectAvatar(idx);
     }
@@ -73,21 +97,51 @@ class Profile extends Component {
     const file = ev.target.files[0];
     if (file) {
       const objectUrl = URL.createObjectURL(file);
-      this.setState({mainPhoto: objectUrl});
+      this.setState({ mainPhoto: objectUrl });
       if (this.props.onClickAddAvatar) {
         this.props.onClickAddAvatar();
       }
     }
-    // 동일 파일 재업로드 허용
-    ev.target.value = '';
+    ev.target.value = ''; // 동일 파일 재업로드 허용
   }
 
   handleShowAlert() {
-    this.setState({showAlert: true});
+    this.setState({ showAlert: true });
   }
 
   handleCloseAlert() {
-    this.setState({showAlert: false});
+    this.setState({ showAlert: false });
+  }
+
+  handleSave() {
+    const { localBio, mainPhoto } = this.state;
+    // eslint-disable-next-line
+    const updatedInfo = {
+      description: localBio,
+      profileImage: mainPhoto,
+    };
+
+    const formData = new FormData();
+    formData.append('profileImage', mainPhoto);  // 이미지 파일
+    formData.append('description', localBio);  // 수정된 자기소개
+
+    axios.post('/members/my', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': 'Bearer your_access_token', // 실제 토큰을 넣어야 합니다.
+      }
+    })
+    .then(response => {
+      if (response.data.isSuccess) {
+        this.setState({ showAlert: true, showError: false });
+      } else {
+        this.setState({ showError: true, errorMessage: response.data.message });
+      }
+    })
+    // eslint-disable-next-line
+    .catch(error => {
+      this.setState({ showError: true, errorMessage: '서버와 연결할 수 없습니다. 다시 시도해주세요.' });
+    });
   }
 
   render() {
@@ -95,7 +149,7 @@ class Profile extends Component {
       userName = '시원',
       userEmail = 'pso9789@yonsei.ac.kr'
     } = this.props;
-    const {mainPhoto, localBio, showAlert} = this.state;
+    const { mainPhoto, localBio, showAlert, showError, errorMessage } = this.state;
     const avatars = this.avatarSources;
 
     return (
@@ -117,11 +171,11 @@ class Profile extends Component {
                     size="small"
                     // eslint-disable-next-line
                     onClick={this.handleAvatarClick.bind(this, i)}
-                    aria-label={`아바타 ${i+1}`}
+                    aria-label={`아바타 ${i + 1}`}
                   >
                     <img
                       src={src}
-                      alt={`avatar-${i+1}`}
+                      alt={`avatar-${i + 1}`}
                     />
                   </Button>
                 ))}
@@ -130,13 +184,14 @@ class Profile extends Component {
                   className="file-upload-button"
                   onClick={this.handleAddAvatarClick}
                   aria-label="프로필 사진 업로드"
-                > &nbsp; +
+                >
+                  &nbsp; +
                 </Button>
                 <input
                   type="file"
                   ref={this.fileInputRef}
                   accept="image/*"
-                  style={{display: 'none'}}
+                  style={{ display: 'none' }}
                   onChange={this.handleFileInputChange}
                 />
               </div>
@@ -150,7 +205,7 @@ class Profile extends Component {
             <div>
               <div className="profile-bio-label">소개글</div>
               <InputField
-                placeholder="안녕하세요."
+                placeholder="자기소개를 입력하세요."
                 component="textarea"
                 className="profile-bio-textarea"
                 value={localBio}
@@ -162,7 +217,7 @@ class Profile extends Component {
               <Button
                 size="small"
                 className="profile-save-button"
-                onClick={this.handleShowAlert}
+                onClick={this.handleSave}
               >
                 저장
               </Button>
@@ -171,6 +226,7 @@ class Profile extends Component {
                   type="fullscreen"
                   // eslint-disable-next-line
                   open={true}
+                  // eslint-disable-next-line
                   onClose={this.handleCloseAlert}
                   title="알림"
                 >
@@ -178,6 +234,17 @@ class Profile extends Component {
                     <Button onClick={this.handleCloseAlert}>확인</Button>
                   </buttons>
                   저장되었습니다!
+                </Alert>
+              )}
+              {showError && (
+                <Alert
+                  type="fullscreen"
+                  // eslint-disable-next-line
+                  open={true}
+                  onClose={this.handleCloseAlert}
+                  title="오류"
+                >
+                  {errorMessage}
                 </Alert>
               )}
             </div>

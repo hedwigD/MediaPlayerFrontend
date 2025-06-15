@@ -4,46 +4,93 @@ import Button from '@enact/sandstone/Button';
 import { InputField } from '@enact/sandstone/Input';
 import BodyText from '@enact/sandstone/BodyText';
 import $L from '@enact/i18n/$L';
-import axios from 'axios'; // axios import
+import axios from 'axios';
 import './account.css';
 
 const Account = ({ onLoginSuccess }) => {
   const [mode, setMode] = useState('login'); // 'login' or 'register'
   const [form, setForm] = useState({ name: '', email: '', password: '', description: '' });
   const [message, setMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false); // 로딩 상태 추가
+  const [isLoading, setIsLoading] = useState(false);
+
+  // (선택) 이미지 입력 지원하려면 state 및 InputField/파일 추가 필요
 
   const handleInputChange = (key, value) => {
     setForm(prev => ({ ...prev, [key]: value }));
   };
 
   const handleSubmit = async () => {
-    setIsLoading(true); // API 요청 전 로딩 시작
-    const url = mode === 'login' ? 'http://15.165.123.189:8080/login' : 'http://15.165.123.189:8080/members/signup'; // API 엔드포인트
+    setIsLoading(true);
+    const url = mode === 'login' ? '/login' : '/members/signup';
 
-    const payload = {
-      email: form.email,
-      password: form.password,
-    };
+    if (mode === 'login') {
+      // 로그인: application/json
+      const payload = {
+        email: form.email,
+        password: form.password,
+      };
+      try {
+        const response = await axios.post(url, payload, { headers: { 'Content-Type': 'application/json' } });
+        const token = response.headers['authorization'] || response.headers['Authorization'];
+        if (response.status === 200 && token) {
+          localStorage.setItem('accessToken', token);
+          setMessage('로그인 성공');
+          onLoginSuccess?.();
+        } else {
+          setMessage('로그인 실패: 토큰이 없습니다.');
+        }
+      } catch (error) {
+        if (error.response) {
+          setMessage(error.response.data?.message || '서버 오류');
+        } else if (error.request) {
+          setMessage('서버와 연결할 수 없습니다. 다시 시도해주세요.');
+        } else {
+          setMessage(`오류 발생: ${error.message}`);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
 
-    if (mode === 'register') {
-      payload.nickname = form.name;
-      payload.description = form.description;
+    // 회원가입: multipart/form-data
+    const formData = new FormData();
+    formData.append(
+      'request',
+      JSON.stringify({
+        email: form.email,
+        password: form.password,
+        nickname: form.name,
+        description: form.description,
+      })
+    );
+    // 'profileImage'는 실제 파일이 없어도 반드시 포함 (빈 Blob)
+    formData.append('profileImage', new Blob([]), '');
+
+    // 디버깅: 실제 들어가는 값 확인
+    for (const pair of formData.entries()) {
+      console.log('[회원가입 FormData]', pair[0], pair[1]);
     }
 
     try {
-      const response = await axios.post(url, payload, { headers: { 'Content-Type': 'application/json' } }); // POST 요청
-      if (response.data.isSuccess) {
-        setMessage(mode === 'login' ? '로그인 성공' : `회원가입 성공: ${form.name}`);
-        onLoginSuccess?.(); // 상위 컴포넌트에 로그인 성공 알림
+      const response = await axios.post(url, formData);
+      if (response.data?.isSuccess) {
+        setMessage('회원가입 성공');
+        onLoginSuccess?.();
         setForm({ name: '', email: '', password: '', description: '' });
       } else {
-        setMessage(response.data.message || '알 수 없는 오류가 발생했습니다.');
+        setMessage(response.data?.message || '회원가입에 실패했습니다.');
       }
     } catch (error) {
-      setMessage('서버와 연결할 수 없습니다. 다시 시도해주세요.');
+      if (error.response) {
+        setMessage(error.response.data?.message || '서버 오류');
+      } else if (error.request) {
+        setMessage('서버와 연결할 수 없습니다. 다시 시도해주세요.');
+      } else {
+        setMessage(`오류 발생: ${error.message}`);
+      }
     } finally {
-      setIsLoading(false); // 로딩 종료
+      setIsLoading(false);
     }
   };
 
