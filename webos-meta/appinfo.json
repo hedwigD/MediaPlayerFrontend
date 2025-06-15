@@ -29,6 +29,8 @@
 	"requiredPermissions": [
 	"network.operation",
 	"networkstatus",
-	"com.webos.service.tv.systemmonitor"
+	"com.webos.service.tv.systemmonitor",
+	"mediadata",                 
+  	"audio"                      
 	]
 }

@@ -189,7 +189,6 @@ const Video = ({src, timestamp = 0, videoId = 0, onViewSummary, onBackToHome, to
           ref={videoRef}
           style={{width: '100%', height: '100%'}}
           autoCloseTimeout={7000}
-          muted
           loop
           title="재생 중인 영상"
         >
