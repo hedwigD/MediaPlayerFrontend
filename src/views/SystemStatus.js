@@ -15,19 +15,21 @@ const SystemStatus = () => {
 				parameters: { subscribe: true },
 				onSuccess: res => {
 					debugLog('CPU_STATS[S]', res);
-					const cpuStats = res.stat.slice(0, 5).map(line => {
-						const parts = line.split(/\s+/);
-						return {
-							name: parts[0], // e.g., cpu0
-							data: [
-								{ name: 'User', value: parseInt(parts[1]) },
-								{ name: 'Nice', value: parseInt(parts[2]) },
-								{ name: 'System', value: parseInt(parts[3]) },
-								{ name: 'Idle', value: parseInt(parts[4]) }
-							]
-						};
-					});
-					setCpuUsage(cpuStats);
+
+					// 첫 번째 줄만 사용 ('cpu')
+					const parts = res.stat[0].split(/\s+/);
+					const cpuData = {
+						name: parts[0], // 'cpu'
+						coreCount: res.stat.length - 1, // cpu0 ~ cpuN
+						data: [
+							{ name: 'User', value: parseInt(parts[1]) },
+							{ name: 'Nice', value: parseInt(parts[2]) },
+							{ name: 'System', value: parseInt(parts[3]) },
+							{ name: 'Idle', value: parseInt(parts[4]) }
+						]
+					};
+
+					setCpuUsage(cpuData);
 				},
 				onFailure: err => debugLog('CPU_STATS[F]', err)
 			});
@@ -66,18 +68,33 @@ const SystemStatus = () => {
 				<ReactECharts
 					option={{
 						backgroundColor: 'transparent',
-						tooltip: { trigger: 'item' },
+						tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
 						series: [
 							{
 								type: 'pie',
 								radius: ['30%', '70%'],
 								avoidLabelOverlap: false,
-								itemStyle: { borderRadius: 5, borderColor: '#000', borderWidth: 1 },
-								label: { show: false },
-								emphasis: {
-									label: { show: true, fontSize: 14, fontWeight: 'bold' }
+								itemStyle: {
+									borderRadius: 5,
+									borderColor: '#000',
+									borderWidth: 1
 								},
-								labelLine: { show: false },
+								label: {
+									show: true,
+									formatter: '{b}: {d}%',
+									color: '#fff',
+									fontSize: 12
+								},
+								emphasis: {
+									label: {
+										show: true,
+										fontSize: 14,
+										fontWeight: 'bold'
+									}
+								},
+								labelLine: {
+									show: true
+								},
 								data: core.data
 							}
 						]
