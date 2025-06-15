@@ -101,6 +101,7 @@ const Main = (props) => {
 								setCurrentVideoId(id);
 								setTabIndex(5);
 							}}
+							token={token}
 						/>
 					) : null}
 				</Tab>
