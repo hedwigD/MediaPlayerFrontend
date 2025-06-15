@@ -21,7 +21,7 @@ const Account = ({ onLoginSuccess }) => {
 
   const handleSubmit = async () => {
     setIsLoading(true);
-    const url = mode === 'login' ? '/login' : '/members/signup';
+    const url = mode === 'login' ? 'http://15.165.123.189:8080/login' : 'http://15.165.123.189:8080/members/signup';
 
     if (mode === 'login') {
       // 로그인: application/json
