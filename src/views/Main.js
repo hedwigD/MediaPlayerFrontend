@@ -9,9 +9,9 @@ import SystemStatus from './SystemStatus';
 import axios from 'axios';
 import Video from './Video';
 import Icon from '@enact/sandstone/Icon';
+import Playlist from './Playlist';
 
 const Main = (props) => {
-	const [videoSrc, setVideoSrc] = useState(null);
 	const [tabIndex, setTabIndex] = useState(2); // 기본 Account 탭
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
 	const [videoInfo, setVideoInfo] = useState({
@@ -75,7 +75,12 @@ const Main = (props) => {
 					{isLoggedIn ? <Home onVideoSelect={handleVideoSelect} /> : null}
 				</Tab>
 				<Tab title={$L('Video Player')}>
-					<Video src={videoInfo.src} timestamp={videoInfo.timestamp} />
+					{isLoggedIn ? (
+						<Video src={videoInfo.src} timestamp={videoInfo.timestamp} />
+					) : null}
+				</Tab>
+				<Tab title={$L('재생목록')}>
+					<Playlist onVideoSelect={handleVideoSelect} />
 				</Tab>
 				<Tab title={$L('Account')}>
 					{/* eslint-disable-next-line */}

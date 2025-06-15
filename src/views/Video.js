@@ -2,6 +2,7 @@ import VideoPlayer from '@enact/sandstone/VideoPlayer';
 import {MediaControls} from '@enact/sandstone/MediaPlayer';
 import Button from '@enact/sandstone/Button';
 import {useRef, useEffect} from 'react';
+import CommentSection from './CommentSection';
 
 const Video = ({src, timestamp = 0}) => {
 	const videoRef = useRef(null);
@@ -13,6 +14,24 @@ const Video = ({src, timestamp = 0}) => {
 		}
 	}, [timestamp, src]);
 
+	const handleCapture = () => {
+		const video = videoRef.current;
+		if (!video) return;
+
+		const canvas = document.createElement('canvas');
+		canvas.width = video.videoWidth;
+		canvas.height = video.videoHeight;
+
+		const ctx = canvas.getContext('2d');
+		ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+		const dataUrl = canvas.toDataURL('image/png');
+		const link = document.createElement('a');
+		link.href = dataUrl;
+		link.download = 'capture.png';
+		link.click();
+	};
+
 	return (
 		<div
 			style={{
@@ -21,7 +40,8 @@ const Video = ({src, timestamp = 0}) => {
 				transformOrigin: 'top',
 				width: '90vw',
 				display: 'flex',
-				justifyContent: 'center',
+				flexDirection: 'column',
+				alignItems: 'center',
 				margin: '0 auto'
 			}}
 		>
@@ -48,13 +68,10 @@ const Video = ({src, timestamp = 0}) => {
 					pauseIcon="pause"
 					playIcon="play"
 				>
-					<Button icon="list" size="small" />
-					<Button icon="playspeed" size="small" />
-					<Button icon="speakercenter" size="small" />
-					<Button icon="miniplayer" size="small" />
-					<Button icon="subtitle" size="small" />
+					<Button icon="camera" size="small" onClick={handleCapture}>캡처</Button>
 				</MediaControls>
 			</VideoPlayer>
+			<CommentSection videoId={0} />
 		</div>
 	);
 };
