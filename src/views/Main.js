@@ -14,8 +14,9 @@ import Summary from './Summary';
 
 const Main = (props) => {
 	const [tabIndex, setTabIndex] = useState(3); // 기본 Account 탭
-	const [token, setToken] = useState(null); 
+	const [token, setToken] = useState(null);
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
+	// eslint-disable-next-line
 	const [viewIndex, setViewIndex] = useState(0);
 	const [videoInfo, setVideoInfo] = useState({
 		src: '',
@@ -99,6 +100,7 @@ const Main = (props) => {
 					{isLoggedIn &&
 						<Home
 							token={token}                     // ← 여기 추가
+							// eslint-disable-next-line
 							onVideoSelect={handleVideoSelect}
 						/>
 					}
@@ -109,27 +111,32 @@ const Main = (props) => {
 							src={videoInfo.src}
 							timestamp={videoInfo.timestamp}
 							videoId={currentVideoId}
+							// eslint-disable-next-line
 							onViewSummary={(id) => {
 								setCurrentVideoId(id);
 								setTabIndex(5);
 							}}
+							// eslint-disable-next-line
 							onBackToHome={() => setTabIndex(0)}
 							token={token}
 						/>
 					) : null}
 				</Tab>
-   				<Tab title={$L('재생목록')}>
+				<Tab title={$L('재생목록')}>
 					{isLoggedIn &&
 					<Playlist
 						token={token}                    // ← 여기에 token prop 추가
+						// eslint-disable-next-line
 						onVideoSelect={handleVideoSelect}
 					/>
 					}
 				</Tab>
-				<Tab title={$L('Account')}>
-					{/* eslint-disable-next-line */}
-					<Account onLoginSuccess={handleLoginSuccess} />
-				</Tab>
+				{!isLoggedIn && (
+					<Tab title={$L('Account')}>
+						{/* eslint-disable-next-line */}
+						<Account onLoginSuccess={handleLoginSuccess} />
+					</Tab>
+				)}
 				<Tab title={$L('My Page')}>
 					{isLoggedIn ? <Profile token={token} /> : null}
 				</Tab>
