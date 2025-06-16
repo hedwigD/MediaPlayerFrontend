@@ -38,7 +38,7 @@ const Profile = ({
   // 회원 정보 받아오기
   useEffect(() => {
     if (!token) return;
-    axios.get('/members/my', {
+    axios.get('http://15.165.123.189:8080/members/my', {
       headers: {
         'Authorization': token, // Bearer 없이 토큰만!
       }
@@ -108,7 +108,7 @@ const Profile = ({
 
     formData.append('description', localBio);
 
-    axios.post('/members/my', formData, {
+    axios.post('http://15.165.123.189:8080/members/my', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
         'Authorization': token, // Bearer 없이!
