@@ -25,7 +25,7 @@ const Profile = ({
   ];
 
   const [userName, setUserName] = useState('');
-  const [userEmail, setUserEmail] = useState('');
+
   const [mainPhoto, setMainPhoto] = useState(avatar2); // 미리보기용 (url)
   const [localBio, setLocalBio] = useState('');
   const [selectedFile, setSelectedFile] = useState(null); // 실제 업로드용
@@ -38,7 +38,7 @@ const Profile = ({
   // 회원 정보 받아오기
   useEffect(() => {
     if (!token) return;
-    axios.get('http://15.165.123.189:8080/members/my', {
+    axios.get('/members/my', {
       headers: {
         'Authorization': token, // Bearer 없이 토큰만!
       }
@@ -47,7 +47,6 @@ const Profile = ({
       if (response.data.isSuccess) {
         const userData = response.data.result;
         setUserName(userData.nickname || '');
-        setUserEmail(userData.email || '');
         setMainPhoto(userData.profileImageUrl || avatar2);
         setLocalBio(userData.description || '');
         setSelectedFile(null); // 초기화
@@ -109,7 +108,7 @@ const Profile = ({
 
     formData.append('description', localBio);
 
-    axios.post('http://15.165.123.189:8080/members/my', formData, {
+    axios.post('/members/my', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
         'Authorization': token, // Bearer 없이!
@@ -186,8 +185,6 @@ const Profile = ({
           <div className="profile-info">
             <div className="profile-info-label">이름</div>
             <div className="profile-info-value">{userName}</div>
-            <div className="profile-info-label">이메일</div>
-            <div className="profile-info-value">{userEmail}</div>
           </div>
           <div>
             <div className="profile-bio-label">소개글</div>
